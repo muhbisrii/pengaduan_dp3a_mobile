@@ -3,8 +3,8 @@ import 'package:pengaduan_dp3a/core/colors.dart';
 import 'package:pengaduan_dp3a/screens/home/tabs/dashboard_tab.dart';
 import 'package:pengaduan_dp3a/screens/home/tabs/history_tab.dart';
 import 'package:pengaduan_dp3a/screens/home/tabs/profile_tab.dart';
+// Import LoginScreen untuk akses fungsi clearSavedLogin()
 
-// 1. Tambahkan parameter 'namaPengguna'
 class HomeScreen extends StatefulWidget {
   final String namaPengguna;
   const HomeScreen({super.key, required this.namaPengguna});
@@ -16,15 +16,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  // 2. Buat _pages menjadi 'late final' agar bisa di-init
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    // 3. Inisialisasi _pages DI SINI, sambil mengirim nama ke DashboardTab
     _pages = [
-      DashboardTab(namaPengguna: widget.namaPengguna), // <-- Kirim nama ke tab
+      // Kirim nama pengguna ke DashboardTab
+      DashboardTab(namaPengguna: widget.namaPengguna), 
       const HistoryTab(),
       const ProfileTab(),
     ];
@@ -36,10 +35,30 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // --- FUNGSI LOGOUT (SOLUSI MASALAH ANDA) ---
+  // ------------------------------------------
+
+
   @override
   Widget build(BuildContext context) {
+    // Kita akan membungkus konten di IndexedStack agar BottomNavigationBar
+    // bisa berfungsi dan kemudian menempatkannya di Scaffold yang sama.
+    // Setiap tab (widget di _pages) HARUS sudah memiliki Scaffold-nya sendiri
+    // jika ingin memiliki AppBar, seperti ProfileTab.
+    
+    // Karena kita perlu tombol Logout, kita akan menempatkannya di ProfileTab
+    // atau di App Bar yang dinamis. 
+    
+    // Namun, jika Anda ingin tombol logout muncul HANYA di ProfileTab, 
+    // Anda harus mengimplementasikannya di ProfileTab.
+    // Jika Anda ingin tombol Logout SELALU tersedia di AppBar utama:
     return Scaffold(
-      body: _pages[_selectedIndex], // Langsung body
+      // Body akan menampilkan Tab yang dipilih
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
+      
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -62,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Dashboard',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.history), // Ikon disesuaikan
+              icon: Icon(Icons.history), 
               label: 'Riwayat',
             ),
             BottomNavigationBarItem(

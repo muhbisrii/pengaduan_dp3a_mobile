@@ -5,7 +5,7 @@ import 'package:pengaduan_dp3a/screens/admin/admin_home_screen.dart';
 import 'package:pengaduan_dp3a/services/api_service.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // <-- IMPORT BARU
+import 'package:shared_preferences/shared_preferences.dart'; // ADDED
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,61 +22,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final ApiService _apiService = ApiService();
   bool _isLoading = false;
-  bool _checkingAutoLogin = true; // <-- TAMBAHAN STATUS LOADING AWAL
 
   @override
   void initState() {
     super.initState();
-    _loadSavedLogin();
+    _loadSavedLogin(); // ADDED
   }
 
-  // ---- AUTOFILL + AUTO LOGIN ----
-  void _loadSavedLogin() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? savedEmail = prefs.getString('saved_email');
-    String? savedPassword = prefs.getString('saved_password');
-
-    if (savedEmail != null) _emailController.text = savedEmail;
-    if (savedPassword != null) _passwordController.text = savedPassword;
-
-    // Jika ada email & password tersimpan → LANGSUNG LOGIN OTOMATIS
-    if (savedEmail != null && savedPassword != null) {
-      await Future.delayed(const Duration(milliseconds: 350));
-      _autoLogin(savedEmail, savedPassword);
-    } else {
-      setState(() => _checkingAutoLogin = false);
-    }
-  }
-
-  // -------- FUNGSI AUTO LOGIN -------
-  void _autoLogin(String email, String password) async {
-    try {
-      final result = await _apiService.login(email, password);
-
-      if (result['success'] == true) {
-        final String role = result['role'];
-        final String nama = result['nama'];
-
-        if (!mounted) return;
-
-        if (role == 'admin') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => AdminHomeScreen(namaPengguna: nama)),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomeScreen(namaPengguna: nama)),
-          );
-        }
-        return;
-      }
-    } catch (e) {
-      // Abaikan error → tampilkan login form saja
-    }
-
-    if (mounted) setState(() => _checkingAutoLogin = false);
+  // ADDED — untuk mengambil email & password tersimpan
+  Future<void> _loadSavedLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    _emailController.text = prefs.getString("saved_email") ?? "";
+    _passwordController.text = prefs.getString("saved_password") ?? "";
   }
 
   @override
@@ -86,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // --- LOGIKA LOGIN (Tetap sama, hanya tambah simpan data) ---
+  // --- LOGIKA LOGIN ---
   void _handleLogin() async {
     if (_isLoading) return;
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -103,24 +60,25 @@ class _LoginScreenState extends State<LoginScreen> {
       final result = await _apiService.login(email, password);
 
       if (result['success'] == true) {
-        // ---------- SIMPAN EMAIL & PASSWORD ----------
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('saved_email', email);
-        await prefs.setString('saved_password', password);
-        // --------------------------------------------------
-
         final String role = result['role'];
         final String nama = result['nama'];
 
+        // ADDED — Simpan email & password lokal agar tidak isi ulang lagi
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setString("saved_email", email);
+        prefs.setString("saved_password", password);
+
         if (role == 'admin') {
-          Navigator.pushReplacement(
+          Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => AdminHomeScreen(namaPengguna: nama)),
+            (route) => false,
           );
         } else {
-          Navigator.pushReplacement(
+          Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => HomeScreen(namaPengguna: nama)),
+            (route) => false,
           );
         }
       } else {
@@ -145,22 +103,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-    // Saat cek auto login → tampilkan loading putih
-    if (_checkingAutoLogin) {
-      return const Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: AppColors.secondary,
       body: SafeArea(
         child: Column(
           children: [
+            // HEADER
             Container(
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
               width: double.infinity,
@@ -221,6 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 25),
 
+                      // Email
                       _buildLabel("Email"),
                       TextFormField(
                         controller: _emailController,
@@ -229,6 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 20),
 
+                      // Password
                       _buildLabel("Kata Sandi"),
                       TextFormField(
                         controller: _passwordController,
@@ -263,6 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 10),
 
+                      // Tombol Login
                       SizedBox(
                         width: double.infinity,
                         height: 52,

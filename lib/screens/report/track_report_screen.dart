@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/colors.dart';
 
 class TrackReportScreen extends StatefulWidget {
@@ -14,48 +15,51 @@ class _TrackReportScreenState extends State<TrackReportScreen> {
   Map<String, dynamic>? _foundData;
   String? _errorMessage;
 
-  // Simulasi Database
-  final List<Map<String, dynamic>> _dummyDatabase = [
-    {
-      "id": "TRX-001",
-      "status": "Diproses",
-      "date": "17 Nov 2025",
-      "category": "Kekerasan Fisik",
-      "notes": "Laporan sedang ditinjau oleh tim lapangan."
-    },
-    {
-      "id": "TRX-002",
-      "status": "Selesai",
-      "date": "10 Nov 2025",
-      "category": "Penelantaran",
-      "notes": "Kasus telah ditutup. Korban sudah aman."
-    },
-  ];
+  // 🔥 Fungsi untuk mencari data laporan di Firestore + efek loading
+  Future<void> _handleSearch() async {
+    final inputId = _searchController.text.trim();
 
-  void _handleSearch() async {
+    if (inputId.isEmpty) {
+      setState(() {
+        _errorMessage = "Masukkan ID laporan terlebih dahulu.";
+        _foundData = null;
+      });
+      return;
+    }
+
     setState(() {
       _isSearching = true;
       _errorMessage = null;
       _foundData = null;
     });
 
-    // Simulasi delay jaringan (loading 1.5 detik)
-    await Future.delayed(const Duration(milliseconds: 1500));
+    try {
+      // 👉 Tambahkan delay agar terlihat loading "seperti online"
+      await Future.delayed(const Duration(seconds: 2));
 
-    setState(() {
-      _isSearching = false;
-      // Mencari data yang cocok dengan input user
-      final result = _dummyDatabase.firstWhere(
-        (element) => element['id'] == _searchController.text.trim(),
-        orElse: () => {},
-      );
+      final doc = await FirebaseFirestore.instance
+          .collection('laporan')
+          .doc(inputId)
+          .get();
 
-      if (result.isNotEmpty) {
-        _foundData = result;
-      } else {
-        _errorMessage = "Nomor Tiket tidak ditemukan. Mohon periksa kembali.";
-      }
-    });
+      setState(() {
+        _isSearching = false;
+
+        if (!doc.exists) {
+          _errorMessage =
+              "Nomor Tiket tidak ditemukan. Mohon periksa kembali.";
+          return;
+        }
+
+        _foundData = doc.data()!;
+        _foundData!['id'] = doc.id;
+      });
+    } catch (e) {
+      setState(() {
+        _isSearching = false;
+        _errorMessage = "Terjadi kesalahan: $e";
+      });
+    }
   }
 
   @override
@@ -63,7 +67,8 @@ class _TrackReportScreenState extends State<TrackReportScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Lacak Status", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text("Lacak Status",
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
@@ -77,7 +82,6 @@ class _TrackReportScreenState extends State<TrackReportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Ilustrasi / Icon Header
             Center(
               child: Container(
                 padding: const EdgeInsets.all(20),
@@ -85,27 +89,24 @@ class _TrackReportScreenState extends State<TrackReportScreen> {
                   color: AppColors.primary.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.search_rounded, size: 60, color: AppColors.primary),
+                child: const Icon(Icons.search_rounded,
+                    size: 60, color: AppColors.primary),
               ),
             ),
+
             const SizedBox(height: 30),
 
-            const Text(
-              "Masukkan ID Laporan",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+            const Text("Masukkan ID Laporan",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const Text(
-              "Cek perkembangan pengaduan Anda secara real-time.",
-              style: TextStyle(color: Colors.grey, fontSize: 13),
-            ),
+            const Text("Cek perkembangan pengaduan Anda secara real-time.",
+                style: TextStyle(color: Colors.grey, fontSize: 13)),
             const SizedBox(height: 20),
 
-            // Input Field
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: "Contoh: TRX-001",
+                hintText: "Contoh: abc123xyz",
                 prefixIcon: const Icon(Icons.qr_code, color: Colors.grey),
                 filled: true,
                 fillColor: Colors.grey[50],
@@ -119,9 +120,9 @@ class _TrackReportScreenState extends State<TrackReportScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
 
-            // Tombol Cari
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -129,32 +130,51 @@ class _TrackReportScreenState extends State<TrackReportScreen> {
                 onPressed: _isSearching ? null : _handleSearch,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 child: _isSearching
                     ? const SizedBox(
-                        height: 20, width: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2.3),
                       )
-                    : const Text("Lacak Sekarang", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    : const Text("Lacak Sekarang",
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
 
             const SizedBox(height: 40),
 
-            // --- HASIL PENCARIAN ---
-            if (_errorMessage != null)
+            if (_isSearching)
               Center(
                 child: Column(
-                  children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 40),
-                    const SizedBox(height: 10),
-                    Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                  children: const [
+                    SizedBox(height: 10),
+                    CircularProgressIndicator(),
+                    SizedBox(height: 12),
+                    Text("Mengambil data dari server...",
+                        style: TextStyle(color: Colors.grey)),
                   ],
                 ),
               ),
 
-            if (_foundData != null)
+            if (_errorMessage != null && !_isSearching)
+              Center(
+                child: Column(
+                  children: [
+                    const Icon(Icons.error_outline,
+                        color: Colors.red, size: 40),
+                    const SizedBox(height: 10),
+                    Text(_errorMessage!,
+                        style: const TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+
+            if (_foundData != null && !_isSearching)
               _buildResultCard(_foundData!),
           ],
         ),
@@ -163,7 +183,11 @@ class _TrackReportScreenState extends State<TrackReportScreen> {
   }
 
   Widget _buildResultCard(Map<String, dynamic> data) {
-    Color statusColor = data['status'] == 'Selesai' ? AppColors.statusDone : AppColors.statusProcess;
+    final status = data['status'] ?? 'Menunggu';
+    Color statusColor = Colors.blue;
+
+    if (status == "Selesai") statusColor = AppColors.statusDone;
+    if (status == "Diproses") statusColor = AppColors.statusProcess;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -172,7 +196,10 @@ class _TrackReportScreenState extends State<TrackReportScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5)),
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5)),
         ],
       ),
       child: Column(
@@ -181,26 +208,34 @@ class _TrackReportScreenState extends State<TrackReportScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Status Terkini", style: TextStyle(color: Colors.grey)),
+              const Text("Status Terkini",
+                  style: TextStyle(color: Colors.grey)),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  data['status'],
-                  style: TextStyle(color: statusColor, fontWeight: FontWeight.bold),
+                  status,
+                  style: TextStyle(
+                      color: statusColor, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
           ),
+
           const Divider(height: 30),
+
           _buildRowInfo("ID Laporan", data['id']),
-          _buildRowInfo("Tanggal", data['date']),
-          _buildRowInfo("Kategori", data['category']),
+          _buildRowInfo("Kategori", data['kategori'] ?? "Tidak ada"),
+          _buildRowInfo("Lokasi", data['lokasi'] ?? "Tidak ada"),
+          _buildRowInfo("Tanggal", data['dibuatPada']?.toString() ?? "-"),
+
           const SizedBox(height: 10),
-          const Text("Catatan Petugas:", style: TextStyle(fontWeight: FontWeight.bold)),
+          const Text("Catatan Petugas:",
+              style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 5),
           Container(
             width: double.infinity,
@@ -209,21 +244,35 @@ class _TrackReportScreenState extends State<TrackReportScreen> {
               color: Colors.grey[50],
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(data['notes'], style: const TextStyle(color: Colors.black87, fontSize: 13)),
+            child: Text(
+              data['tanggapanPetugas'] ?? "Belum ada tanggapan.",
+              style: const TextStyle(color: Colors.black87, fontSize: 13),
+            ),
           )
         ],
       ),
     );
   }
 
+  // ✔ teks panjang otomatis wrap
   Widget _buildRowInfo(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+          SizedBox(
+            width: 120,
+            child: Text(label, style: const TextStyle(color: Colors.grey)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+              softWrap: true,
+            ),
+          ),
         ],
       ),
     );

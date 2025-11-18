@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:pengaduan_dp3a/core/colors.dart';
 import 'package:pengaduan_dp3a/core/styles.dart';
-// --- IMPORT BARU ---
 import 'package:pengaduan_dp3a/services/api_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:pengaduan_dp3a/screens/report/user_report_detail_screen.dart'; 
 
 class HistoryTab extends StatefulWidget {
   const HistoryTab({super.key});
@@ -13,7 +13,6 @@ class HistoryTab extends StatefulWidget {
 }
 
 class _HistoryTabState extends State<HistoryTab> {
-  // --- INISIALISASI API SERVICE ---
   final ApiService _apiService = ApiService();
 
   @override
@@ -28,24 +27,20 @@ class _HistoryTabState extends State<HistoryTab> {
         backgroundColor: Colors.white,
         elevation: 1,
         centerTitle: true,
-        automaticallyImplyLeading: false, // Hilangkan tombol back
+        automaticallyImplyLeading: false,
       ),
-      // --- GUNAKAN STREAMBUILDER UNTUK DATA REAL-TIME ---
       body: StreamBuilder<QuerySnapshot>(
-        // Panggil fungsi stream dari ApiService
         stream: _apiService.getStreamLaporanUser(),
         builder: (context, snapshot) {
-          // 1. Saat loading
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // 2. Jika ada error
           if (snapshot.hasError) {
-            return Center(child: Text("Terjadi error: ${snapshot.error}"));
+            // Menampilkan error secara jelas
+            return Center(child: Text("Terjadi error: ${snapshot.error}. \nPerlu membuat index di Firebase Console."));
           }
 
-          // 3. Jika tidak ada data / data kosong
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(
               child: Column(
@@ -59,20 +54,17 @@ class _HistoryTabState extends State<HistoryTab> {
             );
           }
 
-          // 4. Jika data ada, tampilkan list
           final docs = snapshot.data!.docs;
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: docs.length,
             itemBuilder: (context, index) {
-              // Ambil satu dokumen laporan
               final doc = docs[index];
-              // Ubah data menjadi Map
               final data = doc.data() as Map<String, dynamic>;
               
-              // Kirim data ke card widget
-              return _buildHistoryCard(data, doc.id);
+              // doc.id adalah ID unik dari dokumen
+              return _buildHistoryCard(data, doc.id); 
             },
           );
         },
@@ -80,12 +72,23 @@ class _HistoryTabState extends State<HistoryTab> {
     );
   }
 
-  // --- Widget Card (Sekarang mengambil data dinamis) ---
+  // --- Widget Card (Memperbaiki logika onTap) ---
   Widget _buildHistoryCard(Map<String, dynamic> data, String docId) {
     // Ambil data dari Map (pastikan nama field SAMA dengan di Firestore)
     final String status = data['status'] ?? 'Menunggu';
     final String kategori = data['kategori'] ?? 'Tidak ada Kategori';
-    final String tanggal = data['tanggalKejadian'] ?? 'Tidak ada Tanggal';
+    // Gunakan try-catch untuk mengambil timestamp dan format tanggal
+    String tanggal = 'Tidak ada Tanggal';
+    try {
+        final timestamp = data['dibuatPada'] as Timestamp;
+        // Format tanggal sesuai kebutuhan Anda (contoh sederhana)
+        final DateTime dateTime = timestamp.toDate();
+        tanggal = "${dateTime.day} ${getMonthName(dateTime.month)} ${dateTime.year}, ${dateTime.hour}:${dateTime.minute}";
+    } catch (e) {
+        // Jika 'dibuatPada' tidak ada atau bukan Timestamp, gunakan fallback
+        tanggal = data['tanggalKejadian'] ?? 'Tanggal Tidak Dikenal'; 
+    }
+
     final String kronologi = data['kronologi'] ?? 'Tidak ada kronologi.';
     
     // Logika Menentukan Warna Badge berdasarkan Status
@@ -133,12 +136,13 @@ class _HistoryTabState extends State<HistoryTab> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "ID: $docId", // Gunakan ID Dokumen
+                // Menggunakan 8 karakter pertama docId sebagai ID Tiket yang ditampilkan
+                "ID: ${docId.substring(0, 8).toUpperCase()}", 
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey),
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                tanggal, // Gunakan tanggal dari data
+                tanggal, 
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
@@ -180,10 +184,24 @@ class _HistoryTabState extends State<HistoryTab> {
                 ),
               ),
               const Spacer(),
+              // --- IMPLEMENTASI ONTAP DENGAN PERBAIKAN NAVIGASI DI SINI ---
               InkWell(
                 onTap: () {
-                  // Nanti bisa diarahkan ke Detail Laporan (Gambar 9)
-                  // Kita bisa kirim 'docId' ke halaman detail
+                  // docId sudah berisi ID dokumen (Laporan ID) yang valid
+                  if (docId.isNotEmpty) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserReportDetailScreen(
+                            // KIRIM HANYA SATU PARAMETER (laporanId) DENGAN ID YANG BENAR
+                            laporanId: docId, reportId: '', 
+                          ),
+                        ),
+                      );
+                  } else {
+                      // Ini sebagai fallback jika ID-nya kosong (seharusnya tidak pernah terjadi)
+                      print("Error Navigasi: docId kosong!");
+                  }
                 },
                 child: const Padding(
                   padding: EdgeInsets.all(4.0),
@@ -202,5 +220,24 @@ class _HistoryTabState extends State<HistoryTab> {
         ],
       ),
     );
+  }
+
+  // Fungsi pembantu untuk mendapatkan nama bulan (opsional, ganti jika sudah punya di helper lain)
+  String getMonthName(int month) {
+      switch (month) {
+          case 1: return 'Jan';
+          case 2: return 'Feb';
+          case 3: return 'Mar';
+          case 4: return 'Apr';
+          case 5: return 'Mei';
+          case 6: return 'Jun';
+          case 7: return 'Jul';
+          case 8: return 'Agu';
+          case 9: return 'Sep';
+          case 10: return 'Okt';
+          case 11: return 'Nov';
+          case 12: return 'Des';
+          default: return '';
+      }
   }
 }

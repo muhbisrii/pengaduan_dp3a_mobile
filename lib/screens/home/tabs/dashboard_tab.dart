@@ -1,14 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pengaduan_dp3a/core/colors.dart';
 import 'package:pengaduan_dp3a/core/styles.dart';
 import 'package:pengaduan_dp3a/screens/report/create_report_screen.dart';
 import 'package:pengaduan_dp3a/screens/report/track_report_screen.dart';
 import 'package:pengaduan_dp3a/screens/info/contact_screen.dart';
 
-class DashboardTab extends StatelessWidget {
-  // 1. Tambahkan field dan constructor
+class DashboardTab extends StatefulWidget {
   final String namaPengguna;
   const DashboardTab({super.key, required this.namaPengguna});
+
+  @override
+  State<DashboardTab> createState() => _DashboardTabState();
+}
+
+class _DashboardTabState extends State<DashboardTab> {
+  int diproses = 0;
+  int selesai = 0;
+  int ditolak = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final query = await FirebaseFirestore.instance
+        .collection('laporan')
+        .where('userId', isEqualTo: user.uid)
+        .get();
+
+    int p = 0;
+    int s = 0;
+    int t = 0;
+
+    for (var doc in query.docs) {
+      final status = (doc['status'] ?? "").toString().toLowerCase();
+
+      if (status == "diproses") p++;
+      if (status == "selesai") s++;
+      if (status == "ditolak") t++;
+    }
+
+    setState(() {
+      diproses = p;
+      selesai = s;
+      ditolak = t;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,9 +102,8 @@ class DashboardTab extends StatelessWidget {
                 const Spacer(),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0).copyWith(bottom: 8.0),
-                  // 2. Tampilkan nama pengguna dari variabel
                   child: Text(
-                    "Selamat datang, $namaPengguna", // <-- PERUBAHAN DI SINI
+                    "Selamat datang, ${widget.namaPengguna}",
                     style: AppStyles.sectionTitle.copyWith(color: Colors.white, fontSize: 16),
                   ),
                 ),
@@ -69,14 +112,14 @@ class DashboardTab extends StatelessWidget {
           ),
         ),
       ),
-      
-      // --- ISI BODY (TIDAK BERUBAH) ---
-      body: SingleChildScrollView( 
+
+      // BODY
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // BANNER HOTLINE DARURAT
+            // BANNER DARURAT — TIDAK DIUBAH
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -124,17 +167,14 @@ class DashboardTab extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         ElevatedButton.icon(
-                          onPressed: () {
-                            // Fitur Telepon
-                          },
+                          onPressed: () {},
                           icon: const Icon(Icons.phone, size: 16, color: Color(0xFFE53935)),
-                          label: const Text("Hubungi 112", style: TextStyle(color: Color(0xFFE53935), fontWeight: FontWeight.bold)),
+                          label: const Text("Hubungi 112",
+                              style: TextStyle(color: Color(0xFFE53935), fontWeight: FontWeight.bold)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: const Color(0xFFE53935),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
                             minimumSize: const Size(0, 36),
                           ),
@@ -142,22 +182,17 @@ class DashboardTab extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Ilustrasi/Icon Besar di Kanan
-                  const Icon(
-                    Icons.support_agent_rounded,
-                    size: 80,
-                    color: Colors.white24,
-                  ),
+                  const Icon(Icons.support_agent_rounded, size: 80, color: Colors.white24),
                 ],
               ),
             ),
+
             const SizedBox(height: 24),
-            // 3. MENU LAYANAN (GRID)
-            const Text(
-              "Layanan Utama",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+
+            // LAYANAN UTAMA — TIDAK DIUBAH
+            const Text("Layanan Utama", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
+
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -172,10 +207,7 @@ class DashboardTab extends StatelessWidget {
                   icon: Icons.edit_document,
                   color: Colors.orange,
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const CreateReportScreen()),
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (c) => const CreateReportScreen()));
                   },
                 ),
                 _buildMenuCard(
@@ -184,10 +216,7 @@ class DashboardTab extends StatelessWidget {
                   icon: Icons.track_changes,
                   color: Colors.blue,
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const TrackReportScreen()),
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (c) => const TrackReportScreen()));
                   },
                 ),
                 _buildMenuCard(
@@ -196,16 +225,15 @@ class DashboardTab extends StatelessWidget {
                   icon: Icons.contact_phone,
                   color: Colors.green,
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ContactScreen()),
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (c) => ContactScreen()));
                   },
                 ),
               ],
             ),
+
             const SizedBox(height: 24),
-            // 4. STATISTIK SINGKAT
+
+            // ⭐⭐⭐ BAGIAN STATISTIK — HANYA BAGIAN INI YANG BERUBAH ⭐⭐⭐
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -220,9 +248,9 @@ class DashboardTab extends StatelessWidget {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      _buildStatItem("0", "Diproses", Colors.blue),
-                      _buildStatItem("0", "Selesai", Colors.green),
-                      _buildStatItem("0", "Ditolak", Colors.red),
+                      _buildStatItem(diproses.toString(), "Diproses", Colors.blue),
+                      _buildStatItem(selesai.toString(), "Selesai", Colors.green),
+                      _buildStatItem(ditolak.toString(), "Ditolak", Colors.red),
                     ],
                   ),
                 ],
@@ -234,8 +262,12 @@ class DashboardTab extends StatelessWidget {
     );
   }
 
-  // --- HELPER WIDGETS (TIDAK BERUBAH) ---
-  Widget _buildMenuCard(BuildContext context, {required String title, required IconData icon, required Color color, required VoidCallback onTap}) {
+  // WIDGET ASLI — TIDAK DIUBAH
+
+  Widget _buildMenuCard(
+    BuildContext context,
+    {required String title, required IconData icon, required Color color, required VoidCallback onTap}
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -243,11 +275,7 @@ class DashboardTab extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
+            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4)),
           ],
         ),
         child: Column(
@@ -255,10 +283,7 @@ class DashboardTab extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
               child: Icon(icon, color: color, size: 28),
             ),
             const SizedBox(height: 12),
@@ -281,15 +306,9 @@ class DashboardTab extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Text(
-            count,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
-          ),
+          Text(count, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-          ),
+          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
       ),
     );
