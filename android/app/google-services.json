@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "177772980316",
+    "project_id": "pengaduan-dpppa-bjm",
+    "storage_bucket": "pengaduan-dpppa-bjm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:177772980316:android:9a629890da9bb17f5a5e99",
+        "android_client_info": {
+          "package_name": "com.example.pengaduan_dp3a"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvg2_h48zPRNmR0Gy80RGREgtBRpXJutM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
