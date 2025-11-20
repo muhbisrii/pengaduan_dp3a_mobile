@@ -5,7 +5,7 @@ import 'package:pengaduan_dp3a/screens/admin/admin_home_screen.dart';
 import 'package:pengaduan_dp3a/services/api_service.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // ADDED
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,7 +14,8 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   bool _isPasswordVisible = false;
 
   final _emailController = TextEditingController();
@@ -23,13 +24,31 @@ class _LoginScreenState extends State<LoginScreen> {
   final ApiService _apiService = ApiService();
   bool _isLoading = false;
 
+  // FADE-IN ANIMATION
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
-    _loadSavedLogin(); // ADDED
+
+    // INIT FADE-IN
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOut,
+    );
+
+    _fadeController.forward(); // mulai animasi
+
+    _loadSavedLogin();
   }
 
-  // ADDED — untuk mengambil email & password tersimpan
+  // Ambil email & password tersimpan
   Future<void> _loadSavedLogin() async {
     final prefs = await SharedPreferences.getInstance();
     _emailController.text = prefs.getString("saved_email") ?? "";
@@ -38,6 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
+    _fadeController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -63,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final String role = result['role'];
         final String nama = result['nama'];
 
-        // ADDED — Simpan email & password lokal agar tidak isi ulang lagi
+        // Simpan email & password
         final prefs = await SharedPreferences.getInstance();
         prefs.setString("saved_email", email);
         prefs.setString("saved_password", password);
@@ -71,13 +91,15 @@ class _LoginScreenState extends State<LoginScreen> {
         if (role == 'admin') {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (context) => AdminHomeScreen(namaPengguna: nama)),
+            MaterialPageRoute(
+                builder: (context) => AdminHomeScreen(namaPengguna: nama)),
             (route) => false,
           );
         } else {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (context) => HomeScreen(namaPengguna: nama)),
+            MaterialPageRoute(
+                builder: (context) => HomeScreen(namaPengguna: nama)),
             (route) => false,
           );
         }
@@ -103,176 +125,190 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.secondary,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // HEADER
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-              width: double.infinity,
-              child: Column(
-                children: [
-                  Image.asset(
-                    'assets/images/logo.png',
-                    height: 50,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.local_police, size: 50, color: Colors.white);
-                    },
-                  ),
-                  const SizedBox(height: 15),
-                  const Text(
-                    "Layanan Pengaduan Dinas Pemberdayaan Perempuan dan Perlindungan Anak",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Text(
-                    "Kota Banjarmasin",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: Container(
+    return FadeTransition(
+      opacity: _fadeAnimation, // FADE-IN HERE
+      child: Scaffold(
+        backgroundColor: AppColors.secondary,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // HEADER
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                 width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(24, 30, 24, 20),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
-                  ),
+                child: Column(
+                  children: [
+                    Image.asset(
+                      'assets/images/logo.png',
+                      height: 50,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.local_police,
+                            size: 50, color: Colors.white);
+                      },
+                    ),
+                    const SizedBox(height: 15),
+                    const Text(
+                      "Layanan Pengaduan Dinas Pemberdayaan Perempuan dan Perlindungan Anak",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Text(
+                      "Kota Banjarmasin",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 10),
-                      const Text(
-                        "Selamat Datang!",
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                      ),
-                      const Text(
-                        "Silakan login untuk melanjutkan",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 25),
+              ),
 
-                      // Email
-                      _buildLabel("Email"),
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: _inputDecoration("email@anda.com"),
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      const SizedBox(height: 20),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(24, 30, 24, 20),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 10),
+                        const Text(
+                          "Selamat Datang!",
+                          style: TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.bold),
+                        ),
+                        const Text(
+                          "Silakan login untuk melanjutkan",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                        const SizedBox(height: 25),
 
-                      // Password
-                      _buildLabel("Kata Sandi"),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: !_isPasswordVisible,
-                        decoration: _inputDecoration("Masukkan kata sandi").copyWith(
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                              color: Colors.grey,
+                        // Email
+                        _buildLabel("Email"),
+                        TextFormField(
+                          controller: _emailController,
+                          decoration: _inputDecoration("email@anda.com"),
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Password
+                        _buildLabel("Kata Sandi"),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: !_isPasswordVisible,
+                          decoration:
+                              _inputDecoration("Masukkan kata sandi").copyWith(
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isPasswordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () {
+                                setState(() =>
+                                    _isPasswordVisible = !_isPasswordVisible);
+                              },
                             ),
+                          ),
+                        ),
+
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
                             onPressed: () {
-                              setState(() => _isPasswordVisible = !_isPasswordVisible);
-                            },
-                          ),
-                        ),
-                      ),
-
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
-                            );
-                          },
-                          child: const Text(
-                            "Lupa Kata Sandi?",
-                            style: TextStyle(color: AppColors.primary),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-
-                      // Tombol Login
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: _handleLogin,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 2,
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 3,
-                                  ),
-                                )
-                              : const Text(
-                                  "Masuk",
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("Belum punya akun? "),
-                          GestureDetector(
-                            onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ForgotPasswordScreen()),
                               );
                             },
                             child: const Text(
-                              "Daftar Sekarang",
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              "Lupa Kata Sandi?",
+                              style: TextStyle(color: AppColors.primary),
                             ),
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Tombol Login
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: _handleLogin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 3,
+                                    ),
+                                  )
+                                : const Text(
+                                    "Masuk",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text("Belum punya akun? "),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const RegisterScreen()),
+                                );
+                              },
+                              child: const Text(
+                                "Daftar Sekarang",
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -283,7 +319,8 @@ class _LoginScreenState extends State<LoginScreen> {
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Text(
         text,
-        style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black87),
+        style:
+            const TextStyle(fontWeight: FontWeight.w500, color: Colors.black87),
       ),
     );
   }
@@ -294,7 +331,8 @@ class _LoginScreenState extends State<LoginScreen> {
       hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
       filled: true,
       fillColor: Colors.grey[50],
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: Colors.grey[300]!),

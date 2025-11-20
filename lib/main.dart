@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pengaduan_dp3a/screens/auth/login_screen.dart';
 import 'package:pengaduan_dp3a/core/colors.dart';
+import 'package:pengaduan_dp3a/screens/auth/login_screen.dart';
+import 'package:pengaduan_dp3a/splash/splash_screen.dart'; // path sesuai ralat: lib/splash/splash_screen.dart
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:intl/intl.dart'; 
-import 'package:flutter_localizations/flutter_localizations.dart'; 
+import 'package:intl/intl.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  Intl.defaultLocale = 'id_ID'; 
+
+  Intl.defaultLocale = 'id_ID';
 
   if (kIsWeb) {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: "AIzaSy... ... ...", 
-        authDomain: "pengaduan-dpppa-bjm.firebaseapp.com", 
-        projectId: "pengaduan-dpppa-bjm", 
-        storageBucket: "pengaduan-dpppa-bjm.appspot.com", 
-        messagingSenderId: "1234567890", 
-        appId: "1:1234567890:web:..." 
+        apiKey: "AIzaSy... ... ...",
+        authDomain: "pengaduan-dpppa-bjm.firebaseapp.com",
+        projectId: "pengaduan-dpppa-bjm",
+        storageBucket: "pengaduan-dpppa-bjm.appspot.com",
+        messagingSenderId: "1234567890",
+        appId: "1:1234567890:web:...",
       ),
     );
   } else {
@@ -38,15 +39,15 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Layanan Pengaduan DPPPA',
-      
+
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('en', ''), 
-        Locale('id', 'ID'), 
+        Locale('en', ''),
+        Locale('id', 'ID'),
       ],
 
       theme: ThemeData(
@@ -59,9 +60,15 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      
-      // --- RESET: SELALU KE LOGIN SCREEN ---
-      home: const LoginScreen(),
+
+      // --- Mulai dari SplashScreen ---
+      home: const SplashScreen(),
+
+      // --- Routes: pastikan SplashScreen dapat nav ke '/login' ---
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        // tambahkan route lain di sini jika diperlukan
+      },
     );
   }
 }

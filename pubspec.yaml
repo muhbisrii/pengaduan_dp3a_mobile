@@ -42,6 +42,7 @@ flutter:
   assets:
     - assets/images/
     - assets/maps/maps.html
+    - assets/images/logo2.png
 
 flutter_launcher_icons:
   android: true

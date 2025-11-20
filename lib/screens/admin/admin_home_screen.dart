@@ -56,7 +56,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.dashboard_rounded),
-              label: 'Dashboard',
+              label: 'Beranda',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.folder_shared_rounded),

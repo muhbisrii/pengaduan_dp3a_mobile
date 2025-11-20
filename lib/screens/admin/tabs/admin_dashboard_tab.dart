@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:pengaduan_dp3a/core/colors.dart';
 import 'package:pengaduan_dp3a/core/styles.dart';
 import 'package:pengaduan_dp3a/screens/admin/report_detail_screen.dart';
-// --- IMPORT BARU ---
 import 'package:pengaduan_dp3a/services/api_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
-class AdminDashboardTab extends StatelessWidget {
+class AdminDashboardTab extends StatefulWidget {
   final String namaPengguna;
-  // --- TAMBAHKAN API SERVICE ---
-  final ApiService _apiService = ApiService();
 
-  AdminDashboardTab({super.key, required this.namaPengguna});
+  const AdminDashboardTab({super.key, required this.namaPengguna});
+
+  @override
+  State<AdminDashboardTab> createState() => _AdminDashboardTabState();
+}
+
+class _AdminDashboardTabState extends State<AdminDashboardTab> {
+  final ApiService _apiService = ApiService();
 
   @override
   Widget build(BuildContext context) {
@@ -43,11 +47,13 @@ class AdminDashboardTab extends StatelessWidget {
                         children: [
                           Text(
                             "DP3A Banjarmasin",
-                            style: AppStyles.bodyText.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                            style: AppStyles.bodyText
+                                .copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                           ),
                           Text(
                             "Portal Pengaduan",
-                            style: AppStyles.bodyText.copyWith(color: Colors.white70, fontSize: 12),
+                            style: AppStyles.bodyText.copyWith(
+                                color: Colors.white70, fontSize: 12),
                           ),
                         ],
                       ),
@@ -63,8 +69,9 @@ class AdminDashboardTab extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0).copyWith(bottom: 8.0),
                   child: Text(
-                    "Selamat datang, $namaPengguna",
-                    style: AppStyles.sectionTitle.copyWith(color: Colors.white, fontSize: 16),
+                    "Selamat datang, ${widget.namaPengguna}",
+                    style: AppStyles.sectionTitle
+                        .copyWith(color: Colors.white, fontSize: 16),
                   ),
                 ),
               ],
@@ -72,24 +79,48 @@ class AdminDashboardTab extends StatelessWidget {
           ),
         ),
       ),
-      
-      // --- ISI BODY YANG BENAR ---
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Ringkasan Laporan", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            // --- TITLE + REFRESH ---
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Ringkasan Laporan",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () {
+                    setState(() {}); // <-- BENAR-BENAR REFRESH
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: 15),
 
-            // --- 1. GRID STATISTIK (SEKARANG REAL-TIME) ---
-            _buildStatistikStream(), 
+            _buildStatistikStream(),
 
             const SizedBox(height: 25),
-            const Text("Perlu Tindakan (Menunggu)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+
+            // --- TITLE + REFRESH ---
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Perlu Tindakan (Menunggu)",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () {
+                    setState(() {}); // <-- BENAR-BENAR REFRESH
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: 15),
 
-            // --- 2. LIST LAPORAN TERBARU (SEKARANG REAL-TIME) ---
             _buildPerluTindakanStream(),
           ],
         ),
@@ -97,16 +128,15 @@ class AdminDashboardTab extends StatelessWidget {
     );
   }
 
-  // --- WIDGET BARU: STREAM UNTUK STATISTIK ---
+  // === STREAM STATISTIK ===
   Widget _buildStatistikStream() {
     return StreamBuilder<QuerySnapshot>(
-      stream: _apiService.getStreamStatistikAdmin(), // Panggil stream statistik
+      stream: _apiService.getStreamStatistikAdmin(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // Hitung data statistik
         int masuk = 0;
         int diproses = 0;
         int selesai = 0;
@@ -115,16 +145,11 @@ class AdminDashboardTab extends StatelessWidget {
         for (var doc in snapshot.data!.docs) {
           final data = doc.data() as Map<String, dynamic>;
           final status = data['status'];
-          
-          if (status == 'Menunggu') {
-            masuk++;
-          } else if (status == 'Diproses') {
-            diproses++;
-          } else if (status == 'Selesai') {
-            selesai++;
-          } else if (status == 'Ditolak') {
-            ditolak++;
-          }
+
+          if (status == 'Menunggu') masuk++;
+          else if (status == 'Diproses') diproses++;
+          else if (status == 'Selesai') selesai++;
+          else if (status == 'Ditolak') ditolak++;
         }
 
         return GridView.count(
@@ -145,10 +170,10 @@ class AdminDashboardTab extends StatelessWidget {
     );
   }
 
-  // --- WIDGET BARU: STREAM UNTUK "PERLU TINDAKAN" (STATUS 'Menunggu') ---
+  // === STREAM PERLU TINDAKAN ===
   Widget _buildPerluTindakanStream() {
     return StreamBuilder<QuerySnapshot>(
-      stream: _apiService.getStreamLaporanAdmin('Menunggu'), // Hanya ambil yang 'Menunggu'
+      stream: _apiService.getStreamLaporanAdmin('Menunggu'),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -173,7 +198,7 @@ class AdminDashboardTab extends StatelessWidget {
     );
   }
 
-  // Widget Kartu Statistik (Tidak Berubah)
+  // === WIDGET KARTU STATISTIK ===
   Widget _buildStatCard(String title, String count, Color color, IconData icon) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -193,20 +218,23 @@ class AdminDashboardTab extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Icon(icon, color: color, size: 24),
-              Text(count, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+              Text(count,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
             ],
           ),
-          Text(title, style: const TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.w600)),
+          Text(title,
+              style:
+                  const TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 
-  // Widget Item List Laporan (Di-update untuk data dinamis)
+  // === WIDGET ITEM LAPORAN ===
   Widget _buildTaskItem(BuildContext context, Map<String, dynamic> data, String docId) {
     final kategori = data['kategori'] ?? 'N/A';
     final email = data['emailPelapor'] ?? 'N/A';
-    
+
     final String tanggal;
     if (data['dibuatPada'] != null) {
       tanggal = DateFormat('d MMM yyyy, HH:mm', 'id_ID')
@@ -217,10 +245,10 @@ class AdminDashboardTab extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        // --- KIRIM ID DOKUMEN KE HALAMAN DETAIL ---
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ReportDetailScreen(laporanId: docId)),
+          MaterialPageRoute(
+              builder: (context) => ReportDetailScreen(laporanId: docId)),
         );
       },
       child: Container(
@@ -247,15 +275,10 @@ class AdminDashboardTab extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    kategori,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  Text(kategori, style: const TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(
-                    "Pelapor: $email • $tanggal",
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
-                  ),
+                  Text("Pelapor: $email • $tanggal",
+                      style: const TextStyle(fontSize: 11, color: Colors.grey)),
                 ],
               ),
             ),

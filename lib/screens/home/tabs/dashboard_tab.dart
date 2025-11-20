@@ -75,7 +75,8 @@ class _DashboardTabState extends State<DashboardTab> {
                       Image.asset(
                         'assets/images/logo.png',
                         height: 35,
-                        errorBuilder: (c, o, s) => const Icon(Icons.error, color: Colors.white),
+                        errorBuilder: (c, o, s) =>
+                            const Icon(Icons.error, color: Colors.white),
                       ),
                       const SizedBox(width: 10),
                       Column(
@@ -83,17 +84,21 @@ class _DashboardTabState extends State<DashboardTab> {
                         children: [
                           Text(
                             "DP3A Banjarmasin",
-                            style: AppStyles.bodyText.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                            style: AppStyles.bodyText.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
                           ),
                           Text(
                             "Portal Pengaduan",
-                            style: AppStyles.bodyText.copyWith(color: Colors.white70, fontSize: 12),
+                            style: AppStyles.bodyText.copyWith(
+                                color: Colors.white70, fontSize: 12),
                           ),
                         ],
                       ),
                       const Spacer(),
                       IconButton(
-                        icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                        icon: const Icon(Icons.notifications_outlined,
+                            color: Colors.white),
                         onPressed: () {},
                       ),
                     ],
@@ -101,10 +106,12 @@ class _DashboardTabState extends State<DashboardTab> {
                 ),
                 const Spacer(),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0).copyWith(bottom: 8.0),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20.0).copyWith(bottom: 8.0),
                   child: Text(
                     "Selamat datang, ${widget.namaPengguna}",
-                    style: AppStyles.sectionTitle.copyWith(color: Colors.white, fontSize: 16),
+                    style: AppStyles.sectionTitle
+                        .copyWith(color: Colors.white, fontSize: 16),
                   ),
                 ),
               ],
@@ -119,7 +126,7 @@ class _DashboardTabState extends State<DashboardTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // BANNER DARURAT — TIDAK DIUBAH
+            // BANNER DARURAT — tidak diubah
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -152,7 +159,10 @@ class _DashboardTabState extends State<DashboardTab> {
                           ),
                           child: const Text(
                             "DARURAT 24 JAM",
-                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -168,29 +178,38 @@ class _DashboardTabState extends State<DashboardTab> {
                         const SizedBox(height: 12),
                         ElevatedButton.icon(
                           onPressed: () {},
-                          icon: const Icon(Icons.phone, size: 16, color: Color(0xFFE53935)),
-                          label: const Text("Hubungi 112",
-                              style: TextStyle(color: Color(0xFFE53935), fontWeight: FontWeight.bold)),
+                          icon: const Icon(Icons.phone,
+                              size: 16, color: Color(0xFFE53935)),
+                          label: const Text(
+                            "Hubungi 112",
+                            style: TextStyle(
+                                color: Color(0xFFE53935),
+                                fontWeight: FontWeight.bold),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: const Color(0xFFE53935),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 0),
                             minimumSize: const Size(0, 36),
                           ),
                         )
                       ],
                     ),
                   ),
-                  const Icon(Icons.support_agent_rounded, size: 80, color: Colors.white24),
+                  const Icon(Icons.support_agent_rounded,
+                      size: 80, color: Colors.white24),
                 ],
               ),
             ),
 
             const SizedBox(height: 24),
 
-            // LAYANAN UTAMA — TIDAK DIUBAH
-            const Text("Layanan Utama", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            // LAYANAN UTAMA — tidak diubah
+            const Text("Layanan Utama",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
 
             GridView.count(
@@ -207,7 +226,11 @@ class _DashboardTabState extends State<DashboardTab> {
                   icon: Icons.edit_document,
                   color: Colors.orange,
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (c) => const CreateReportScreen()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (c) => const CreateReportScreen()),
+                    );
                   },
                 ),
                 _buildMenuCard(
@@ -216,7 +239,11 @@ class _DashboardTabState extends State<DashboardTab> {
                   icon: Icons.track_changes,
                   color: Colors.blue,
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (c) => const TrackReportScreen()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (c) => const TrackReportScreen()),
+                    );
                   },
                 ),
                 _buildMenuCard(
@@ -225,7 +252,10 @@ class _DashboardTabState extends State<DashboardTab> {
                   icon: Icons.contact_phone,
                   color: Colors.green,
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (c) => ContactScreen()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (c) => ContactScreen()),
+                    );
                   },
                 ),
               ],
@@ -233,7 +263,7 @@ class _DashboardTabState extends State<DashboardTab> {
 
             const SizedBox(height: 24),
 
-            // ⭐⭐⭐ BAGIAN STATISTIK — HANYA BAGIAN INI YANG BERUBAH ⭐⭐⭐
+            // ⭐⭐⭐ BAGIAN STATISTIK — ADA TOMBOL REFRESH ⭐⭐⭐
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -244,8 +274,24 @@ class _DashboardTabState extends State<DashboardTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Statistik Laporan Anda", style: TextStyle(fontWeight: FontWeight.bold)),
+                  // --- TITLE + REFRESH DI UJUNG KANAN ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Statistik Laporan Anda",
+                          style:
+                              TextStyle(fontWeight: FontWeight.bold)),
+                      IconButton(
+                        icon: const Icon(Icons.refresh, size: 22),
+                        onPressed: () async {
+                          await _loadStats(); // refresh beneran
+                        },
+                      ),
+                    ],
+                  ),
+
                   const SizedBox(height: 16),
+
                   Row(
                     children: [
                       _buildStatItem(diproses.toString(), "Diproses", Colors.blue),
@@ -262,12 +308,14 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
-  // WIDGET ASLI — TIDAK DIUBAH
-
+  // WIDGET ASLI — tidak diubah
   Widget _buildMenuCard(
-    BuildContext context,
-    {required String title, required IconData icon, required Color color, required VoidCallback onTap}
-  ) {
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -275,7 +323,11 @@ class _DashboardTabState extends State<DashboardTab> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4)),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
         child: Column(
@@ -283,7 +335,8 @@ class _DashboardTabState extends State<DashboardTab> {
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+              decoration:
+                  BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
               child: Icon(icon, color: color, size: 28),
             ),
             const SizedBox(height: 12),
@@ -306,9 +359,12 @@ class _DashboardTabState extends State<DashboardTab> {
     return Expanded(
       child: Column(
         children: [
-          Text(count, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+          Text(count,
+              style: TextStyle(
+                  fontSize: 20, fontWeight: FontWeight.bold, color: color)),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+          Text(label,
+              style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
       ),
     );
